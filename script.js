@@ -1,5 +1,14 @@
 (() => {
+  var __create = Object.create;
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getProtoOf = Object.getPrototypeOf;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __esm = (fn, res) =>
+    function __init() {
+      return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])((fn = 0))), res;
+    };
   var __commonJS = (cb, mod2) =>
     function __require() {
       return (
@@ -11,6 +20,37 @@
         mod2.exports
       );
     };
+  var __export = (target, all) => {
+    for (var name2 in all)
+      __defProp(target, name2, { get: all[name2], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if ((from && typeof from === "object") || typeof from === "function") {
+      for (let key2 of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key2) && key2 !== except)
+          __defProp(to, key2, {
+            get: () => from[key2],
+            enumerable:
+              !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable,
+          });
+    }
+    return to;
+  };
+  var __toESM = (mod2, isNodeMode, target) => (
+    (target = mod2 != null ? __create(__getProtoOf(mod2)) : {}),
+    __copyProps(
+      // If the importer is in node compatibility mode or this is not an ESM
+      // file that has been converted to a CommonJS file using a Babel-
+      // compatible transform (i.e. "__esModule" has not been set), then set
+      // "default" to the CommonJS "module.exports" for node compatibility.
+      isNodeMode || !mod2 || !mod2.__esModule
+        ? __defProp(target, "default", { value: mod2, enumerable: true })
+        : target,
+      mod2
+    )
+  );
+  var __toCommonJS = (mod2) =>
+    __copyProps(__defProp({}, "__esModule", { value: true }), mod2);
 
   // shared/render/plugins/BaseSiteModules/tram-min.js
   var require_tram_min = __commonJS({
@@ -9986,8 +10026,8 @@
       Object.defineProperty(exports2, "__esModule", {
         value: true,
       });
-      exports2.strFromU8 = strFromU8;
-      exports2.unzip = unzip;
+      exports2.strFromU8 = strFromU82;
+      exports2.unzip = unzip2;
       var ch2 = {};
       var wk = function (c, id, msg, transfer, cb) {
         const w = new Worker(
@@ -10447,7 +10487,7 @@
             : (r += String.fromCharCode(c));
         }
       };
-      function strFromU8(dat, latin1) {
+      function strFromU82(dat, latin1) {
         if (latin1) {
           let r = "";
           for (let i2 = 0; i2 < dat.length; i2 += 16384)
@@ -10466,7 +10506,7 @@
       };
       var zh = function (d, b, z) {
         const fnl = b2(d, b + 28),
-          fn = strFromU8(
+          fn = strFromU82(
             d.subarray(b + 46, b + 46 + fnl),
             !(2048 & b2(d, b + 8))
           ),
@@ -10496,7 +10536,7 @@
           : function (fn) {
               fn();
             };
-      function unzip(data2, opts, cb) {
+      function unzip2(data2, opts, cb) {
         cb || ((cb = opts), (opts = {})), "function" != typeof cb && err(7);
         const term = [],
           tAll = function () {
@@ -10581,113 +10621,114 @@
     },
   });
 
-  // packages/systems/core/utils/LottieFetchUtils/index.js
-  var require_LottieFetchUtils = __commonJS({
-    "packages/systems/core/utils/LottieFetchUtils/index.js"(exports2) {
-      "use strict";
-      Object.defineProperty(exports2, "__esModule", {
-        value: true,
-      });
-      exports2.fetchLottie = fetchLottie;
-      exports2.unZipDotLottie = unZipDotLottie;
-      var _fflate = require_fflate_min();
-      function parseManifest(data2) {
-        const manifest = JSON.parse(data2);
-        if (!("animations" in manifest)) {
-          throw new Error("Manifest not found");
-        }
-        if (manifest.animations.length === 0) {
-          throw new Error("No animations listed in the manifest");
-        }
-        return manifest;
+  // packages/systems/core/utils/LottieFetchUtils/index.ts
+  var LottieFetchUtils_exports = {};
+  __export(LottieFetchUtils_exports, {
+    fetchLottie: () => fetchLottie,
+    unZipDotLottie: () => unZipDotLottie,
+  });
+  function parseManifest(data2) {
+    const manifest = JSON.parse(data2);
+    if (!("animations" in manifest)) {
+      throw new Error("Manifest not found");
+    }
+    if (manifest.animations.length === 0) {
+      throw new Error("No animations listed in the manifest");
+    }
+    return manifest;
+  }
+  function isBytesZip(bytes) {
+    const b = new Uint8Array(bytes, 0, 32);
+    return b[0] === 80 && b[1] === 75 && b[2] === 3 && b[3] === 4;
+  }
+  async function fetchRequest(url) {
+    return await fetch(new URL(url).href).then((r) => r.arrayBuffer());
+  }
+  async function base64fromU8(data2) {
+    const base64url = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(new Blob([data2]));
+      reader.onload = () => resolve(reader.result);
+    });
+    return base64url.split(",", 2)[1];
+  }
+  async function unZip(buffer) {
+    const file = new Uint8Array(buffer);
+    const lottieFile = await new Promise((resolve, reject) => {
+      (0, import_fflate.unzip)(file, (err, unzipped) =>
+        err ? reject(err) : resolve(unzipped)
+      );
+    });
+    return {
+      // @ts-expect-error - TS2322 - Type 'string | Uint8Array | Uint16Array | Uint32Array' is not assignable to type 'string'.
+      read: (path) => (0, import_fflate.strFromU8)(lottieFile[path]),
+      readB64: async (path) => await base64fromU8(lottieFile[path]),
+    };
+  }
+  async function prepareLottieAssets(lottieJson, dotLottie) {
+    if (!("assets" in lottieJson)) {
+      return lottieJson;
+    }
+    async function parseAsset(asset) {
+      const { p } = asset;
+      if (p == null) return asset;
+      if (dotLottie.read(`images/${p}`) == null) return asset;
+      const ext = p.split(".").pop();
+      const assetB64 = await dotLottie.readB64(`images/${p}`);
+      if (ext?.startsWith("data:")) {
+        asset.p = ext;
+        asset.e = 1;
+        return asset;
       }
-      function isBytesZip(bytes) {
-        const b = new Uint8Array(bytes, 0, 32);
-        return b[0] === 80 && b[1] === 75 && b[2] === 3 && b[3] === 4;
+      switch (ext) {
+        case "svg":
+        case "svg+xml":
+          asset.p = `data:image/svg+xml;base64,${assetB64}`;
+          break;
+        case "png":
+        case "jpg":
+        case "jpeg":
+        case "gif":
+        case "webp":
+          asset.p = `data:image/${ext};base64,${assetB64}`;
+          break;
+        default:
+          asset.p = `data:;base64,${assetB64}`;
       }
-      async function fetchRequest(url) {
-        return await fetch(new URL(url).href).then((r) => r.arrayBuffer());
-      }
-      async function base64fromU8(data2) {
-        const base64url = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(new Blob([data2]));
-          reader.onload = () => resolve(reader.result);
-        });
-        return base64url.split(",", 2)[1];
-      }
-      async function unZip(buffer) {
-        const file = new Uint8Array(buffer);
-        const lottieFile = await new Promise((resolve, reject) => {
-          (0, _fflate.unzip)(file, (err, unzipped) =>
-            err ? reject(err) : resolve(unzipped)
-          );
-        });
-        return {
-          read: (path) => (0, _fflate.strFromU8)(lottieFile[path]),
-          readB64: async (path) => await base64fromU8(lottieFile[path]),
-        };
-      }
-      async function prepareLottieAssets(lottieJson, dotLottie) {
-        if (!("assets" in lottieJson)) {
-          return lottieJson;
-        }
-        async function parseAsset(asset) {
-          const { p } = asset;
-          if (p == null) return asset;
-          if (dotLottie.read(`images/${p}`) == null) return asset;
-          const ext = p.split(".").pop();
-          const assetB64 = await dotLottie.readB64(`images/${p}`);
-          if (ext.startsWith("data:")) {
-            asset.p = ext;
-            asset.e = 1;
-            return asset;
-          }
-          switch (ext) {
-            case "svg":
-            case "svg+xml":
-              asset.p = `data:image/svg+xml;base64,${assetB64}`;
-              break;
-            case "png":
-            case "jpg":
-            case "jpeg":
-            case "gif":
-            case "webp":
-              asset.p = `data:image/${ext};base64,${assetB64}`;
-              break;
-            default:
-              asset.p = `data:;base64,${assetB64}`;
-          }
-          asset.e = 1;
-          return asset;
-        }
-        const result = await Promise.all(lottieJson.assets.map(parseAsset));
-        result.map((asset, i) => {
-          lottieJson.assets[i] = asset;
-        });
-        return lottieJson;
-      }
-      async function unZipDotLottie(response) {
-        const dotLottie = await unZip(response);
-        const manifest = parseManifest(dotLottie.read("manifest.json"));
-        const animations = await Promise.all(
-          manifest.animations.map((a) => {
-            const lottieJson = JSON.parse(
-              dotLottie.read(`animations/${a.id}.json`)
-            );
-            return prepareLottieAssets(lottieJson, dotLottie);
-          })
+      asset.e = 1;
+      return asset;
+    }
+    const result = await Promise.all(lottieJson.assets.map(parseAsset));
+    result.map((asset, i) => {
+      lottieJson.assets[i] = asset;
+    });
+    return lottieJson;
+  }
+  async function unZipDotLottie(response) {
+    const dotLottie = await unZip(response);
+    const manifest = parseManifest(dotLottie.read("manifest.json"));
+    const animations = await Promise.all(
+      manifest.animations.map((a) => {
+        const lottieJson = JSON.parse(
+          dotLottie.read(`animations/${a.id}.json`)
         );
-        return animations[0];
-      }
-      async function fetchLottie(url) {
-        const response = await fetchRequest(url);
-        if (isBytesZip(response)) {
-          return await unZipDotLottie(response);
-        }
-        const lottieJson = JSON.parse(new TextDecoder().decode(response));
-        return lottieJson;
-      }
+        return prepareLottieAssets(lottieJson, dotLottie);
+      })
+    );
+    return animations[0];
+  }
+  async function fetchLottie(url) {
+    const response = await fetchRequest(url);
+    if (isBytesZip(response)) {
+      return await unZipDotLottie(response);
+    }
+    const lottieJson = JSON.parse(new TextDecoder().decode(response));
+    return lottieJson;
+  }
+  var import_fflate;
+  var init_LottieFetchUtils = __esm({
+    "packages/systems/core/utils/LottieFetchUtils/index.ts"() {
+      import_fflate = __toESM(require_fflate_min());
     },
   });
 
@@ -10709,7 +10750,8 @@
       var _defineProperty2 = _interopRequireDefault(require_defineProperty());
       var _findIndex = _interopRequireDefault(require_findIndex());
       require_array3();
-      var _LottieFetchUtils = require_LottieFetchUtils();
+      var _LottieFetchUtils =
+        (init_LottieFetchUtils(), __toCommonJS(LottieFetchUtils_exports));
       var getLottieLibrary = () => window.Webflow.require("lottie").lottie;
       var isInDesigner = () =>
         Boolean(window.Webflow.env("design") || window.Webflow.env("preview"));
@@ -26322,6 +26364,14 @@
             ) {
               shouldBrand = true;
             }
+            if (shouldBrand && !isPhantom) {
+              brandElement = brandElement || createBadge();
+              ensureBrand();
+              setTimeout(ensureBrand, 500);
+              $(doc)
+                .off(fullScreenEvents, onFullScreenChange)
+                .on(fullScreenEvents, onFullScreenChange);
+            }
           };
           function onFullScreenChange() {
             var fullScreen =
@@ -26335,7 +26385,30 @@
               fullScreen ? "display: none !important;" : ""
             );
           }
-
+          function createBadge() {
+            var $brand = $('<a class="w-webflow-badge"></a>').attr(
+              "href",
+              "https://webflow.com?utm_campaign=brandjs"
+            );
+            var $logoArt = $("<img>")
+              .attr(
+                "src",
+                "https://d3e54v103j8qbb.cloudfront.net/img/webflow-badge-icon.f67cd735e3.svg"
+              )
+              .attr("alt", "")
+              .css({
+                marginRight: "8px",
+                width: "16px",
+              });
+            var $logoText = $("<img>")
+              .attr(
+                "src",
+                "https://d1otoma47x30pg.cloudfront.net/img/webflow-badge-text.6faa6a38cd.svg"
+              )
+              .attr("alt", "Made in Webflow");
+            $brand.append($logoArt, $logoText);
+            return $brand[0];
+          }
           function ensureBrand() {
             var found = $body.children(namespace);
             var match = found.length && found.get(0) === brandElement;
@@ -36008,6 +36081,507 @@
     },
   });
 
+  // shared/render/plugins/Navbar/webflow-navbar.js
+  var require_webflow_navbar = __commonJS({
+    "shared/render/plugins/Navbar/webflow-navbar.js"(exports2, module2) {
+      var Webflow = require_webflow_lib();
+      var IXEvents = require_webflow_ix2_events();
+      var KEY_CODES = {
+        ARROW_LEFT: 37,
+        ARROW_UP: 38,
+        ARROW_RIGHT: 39,
+        ARROW_DOWN: 40,
+        ESCAPE: 27,
+        SPACE: 32,
+        ENTER: 13,
+        HOME: 36,
+        END: 35,
+      };
+      Webflow.define(
+        "navbar",
+        (module2.exports = function ($, _) {
+          var api = {};
+          var tram = $.tram;
+          var $win = $(window);
+          var $doc = $(document);
+          var debounce = _.debounce;
+          var $body;
+          var $navbars;
+          var designer;
+          var inEditor;
+          var inApp = Webflow.env();
+          var overlay = '<div class="w-nav-overlay" data-wf-ignore />';
+          var namespace = ".w-nav";
+          var navbarOpenedButton = "w--open";
+          var navbarOpenedDropdown = "w--nav-dropdown-open";
+          var navbarOpenedDropdownToggle = "w--nav-dropdown-toggle-open";
+          var navbarOpenedDropdownList = "w--nav-dropdown-list-open";
+          var navbarOpenedLink = "w--nav-link-open";
+          var ix = IXEvents.triggers;
+          var menuSibling = $();
+          api.ready = api.design = api.preview = init;
+          api.destroy = function () {
+            menuSibling = $();
+            removeListeners();
+            if ($navbars && $navbars.length) {
+              $navbars.each(teardown);
+            }
+          };
+          function init() {
+            designer = inApp && Webflow.env("design");
+            inEditor = Webflow.env("editor");
+            $body = $(document.body);
+            $navbars = $doc.find(namespace);
+            if (!$navbars.length) {
+              return;
+            }
+            $navbars.each(build);
+            removeListeners();
+            addListeners();
+          }
+          function removeListeners() {
+            Webflow.resize.off(resizeAll);
+          }
+          function addListeners() {
+            Webflow.resize.on(resizeAll);
+          }
+          function resizeAll() {
+            $navbars.each(resize);
+          }
+          function build(i, el) {
+            var $el = $(el);
+            var data2 = $.data(el, namespace);
+            if (!data2) {
+              data2 = $.data(el, namespace, {
+                open: false,
+                el: $el,
+                config: {},
+                selectedIdx: -1,
+              });
+            }
+            data2.menu = $el.find(".w-nav-menu");
+            data2.links = data2.menu.find(".w-nav-link");
+            data2.dropdowns = data2.menu.find(".w-dropdown");
+            data2.dropdownToggle = data2.menu.find(".w-dropdown-toggle");
+            data2.dropdownList = data2.menu.find(".w-dropdown-list");
+            data2.button = $el.find(".w-nav-button");
+            data2.container = $el.find(".w-container");
+            data2.overlayContainerId = "w-nav-overlay-" + i;
+            data2.outside = outside(data2);
+            var navBrandLink = $el.find(".w-nav-brand");
+            if (
+              navBrandLink &&
+              navBrandLink.attr("href") === "/" &&
+              navBrandLink.attr("aria-label") == null
+            ) {
+              navBrandLink.attr("aria-label", "home");
+            }
+            data2.button.attr("style", "-webkit-user-select: text;");
+            if (data2.button.attr("aria-label") == null) {
+              data2.button.attr("aria-label", "menu");
+            }
+            data2.button.attr("role", "button");
+            data2.button.attr("tabindex", "0");
+            data2.button.attr("aria-controls", data2.overlayContainerId);
+            data2.button.attr("aria-haspopup", "menu");
+            data2.button.attr("aria-expanded", "false");
+            data2.el.off(namespace);
+            data2.button.off(namespace);
+            data2.menu.off(namespace);
+            configure(data2);
+            if (designer) {
+              removeOverlay(data2);
+              data2.el.on("setting" + namespace, handler(data2));
+            } else {
+              addOverlay(data2);
+              data2.button.on("click" + namespace, toggle(data2));
+              data2.menu.on("click" + namespace, "a", navigate(data2));
+              data2.button.on(
+                "keydown" + namespace,
+                makeToggleButtonKeyboardHandler(data2)
+              );
+              data2.el.on(
+                "keydown" + namespace,
+                makeLinksKeyboardHandler(data2)
+              );
+            }
+            resize(i, el);
+          }
+          function teardown(i, el) {
+            var data2 = $.data(el, namespace);
+            if (data2) {
+              removeOverlay(data2);
+              $.removeData(el, namespace);
+            }
+          }
+          function removeOverlay(data2) {
+            if (!data2.overlay) {
+              return;
+            }
+            close(data2, true);
+            data2.overlay.remove();
+            data2.overlay = null;
+          }
+          function addOverlay(data2) {
+            if (data2.overlay) {
+              return;
+            }
+            data2.overlay = $(overlay).appendTo(data2.el);
+            data2.overlay.attr("id", data2.overlayContainerId);
+            data2.parent = data2.menu.parent();
+            close(data2, true);
+          }
+          function configure(data2) {
+            var config = {};
+            var old = data2.config || {};
+            var animation = (config.animation =
+              data2.el.attr("data-animation") || "default");
+            config.animOver = /^over/.test(animation);
+            config.animDirect = /left$/.test(animation) ? -1 : 1;
+            if (old.animation !== animation) {
+              data2.open && _.defer(reopen, data2);
+            }
+            config.easing = data2.el.attr("data-easing") || "ease";
+            config.easing2 = data2.el.attr("data-easing2") || "ease";
+            var duration = data2.el.attr("data-duration");
+            config.duration = duration != null ? Number(duration) : 400;
+            config.docHeight = data2.el.attr("data-doc-height");
+            data2.config = config;
+          }
+          function handler(data2) {
+            return function (evt, options) {
+              options = options || {};
+              var winWidth = $win.width();
+              configure(data2);
+              options.open === true && open(data2, true);
+              options.open === false && close(data2, true);
+              data2.open &&
+                _.defer(function () {
+                  if (winWidth !== $win.width()) {
+                    reopen(data2);
+                  }
+                });
+            };
+          }
+          function makeToggleButtonKeyboardHandler(data2) {
+            return function (evt) {
+              switch (evt.keyCode) {
+                case KEY_CODES.SPACE:
+                case KEY_CODES.ENTER: {
+                  toggle(data2)();
+                  evt.preventDefault();
+                  return evt.stopPropagation();
+                }
+                case KEY_CODES.ESCAPE: {
+                  close(data2);
+                  evt.preventDefault();
+                  return evt.stopPropagation();
+                }
+                case KEY_CODES.ARROW_RIGHT:
+                case KEY_CODES.ARROW_DOWN:
+                case KEY_CODES.HOME:
+                case KEY_CODES.END: {
+                  if (!data2.open) {
+                    evt.preventDefault();
+                    return evt.stopPropagation();
+                  }
+                  if (evt.keyCode === KEY_CODES.END) {
+                    data2.selectedIdx = data2.links.length - 1;
+                  } else {
+                    data2.selectedIdx = 0;
+                  }
+                  focusSelectedLink(data2);
+                  evt.preventDefault();
+                  return evt.stopPropagation();
+                }
+              }
+            };
+          }
+          function makeLinksKeyboardHandler(data2) {
+            return function (evt) {
+              if (!data2.open) {
+                return;
+              }
+              data2.selectedIdx = data2.links.index(document.activeElement);
+              switch (evt.keyCode) {
+                case KEY_CODES.HOME:
+                case KEY_CODES.END: {
+                  if (evt.keyCode === KEY_CODES.END) {
+                    data2.selectedIdx = data2.links.length - 1;
+                  } else {
+                    data2.selectedIdx = 0;
+                  }
+                  focusSelectedLink(data2);
+                  evt.preventDefault();
+                  return evt.stopPropagation();
+                }
+                case KEY_CODES.ESCAPE: {
+                  close(data2);
+                  data2.button.focus();
+                  evt.preventDefault();
+                  return evt.stopPropagation();
+                }
+                case KEY_CODES.ARROW_LEFT:
+                case KEY_CODES.ARROW_UP: {
+                  data2.selectedIdx = Math.max(-1, data2.selectedIdx - 1);
+                  focusSelectedLink(data2);
+                  evt.preventDefault();
+                  return evt.stopPropagation();
+                }
+                case KEY_CODES.ARROW_RIGHT:
+                case KEY_CODES.ARROW_DOWN: {
+                  data2.selectedIdx = Math.min(
+                    data2.links.length - 1,
+                    data2.selectedIdx + 1
+                  );
+                  focusSelectedLink(data2);
+                  evt.preventDefault();
+                  return evt.stopPropagation();
+                }
+              }
+            };
+          }
+          function focusSelectedLink(data2) {
+            if (data2.links[data2.selectedIdx]) {
+              var selectedElement = data2.links[data2.selectedIdx];
+              selectedElement.focus();
+              navigate(selectedElement);
+            }
+          }
+          function reopen(data2) {
+            if (!data2.open) {
+              return;
+            }
+            close(data2, true);
+            open(data2, true);
+          }
+          function toggle(data2) {
+            return debounce(function () {
+              data2.open ? close(data2) : open(data2);
+            });
+          }
+          function navigate(data2) {
+            return function (evt) {
+              var link = $(this);
+              var href = link.attr("href");
+              if (!Webflow.validClick(evt.currentTarget)) {
+                evt.preventDefault();
+                return;
+              }
+              if (href && href.indexOf("#") === 0 && data2.open) {
+                close(data2);
+              }
+            };
+          }
+          function outside(data2) {
+            if (data2.outside) {
+              $doc.off("click" + namespace, data2.outside);
+            }
+            return function (evt) {
+              var $target = $(evt.target);
+              if (
+                inEditor &&
+                $target.closest(".w-editor-bem-EditorOverlay").length
+              ) {
+                return;
+              }
+              outsideDebounced(data2, $target);
+            };
+          }
+          var outsideDebounced = debounce(function (data2, $target) {
+            if (!data2.open) {
+              return;
+            }
+            var menu = $target.closest(".w-nav-menu");
+            if (!data2.menu.is(menu)) {
+              close(data2);
+            }
+          });
+          function resize(i, el) {
+            var data2 = $.data(el, namespace);
+            var collapsed = (data2.collapsed =
+              data2.button.css("display") !== "none");
+            if (data2.open && !collapsed && !designer) {
+              close(data2, true);
+            }
+            if (data2.container.length) {
+              var updateEachMax = updateMax(data2);
+              data2.links.each(updateEachMax);
+              data2.dropdowns.each(updateEachMax);
+            }
+            if (data2.open) {
+              setOverlayHeight(data2);
+            }
+          }
+          var maxWidth = "max-width";
+          function updateMax(data2) {
+            var containMax = data2.container.css(maxWidth);
+            if (containMax === "none") {
+              containMax = "";
+            }
+            return function (i, link) {
+              link = $(link);
+              link.css(maxWidth, "");
+              if (link.css(maxWidth) === "none") {
+                link.css(maxWidth, containMax);
+              }
+            };
+          }
+          function addMenuOpen(i, el) {
+            el.setAttribute("data-nav-menu-open", "");
+          }
+          function removeMenuOpen(i, el) {
+            el.removeAttribute("data-nav-menu-open");
+          }
+          function open(data2, immediate) {
+            if (data2.open) {
+              return;
+            }
+            data2.open = true;
+            data2.menu.each(addMenuOpen);
+            data2.links.addClass(navbarOpenedLink);
+            data2.dropdowns.addClass(navbarOpenedDropdown);
+            data2.dropdownToggle.addClass(navbarOpenedDropdownToggle);
+            data2.dropdownList.addClass(navbarOpenedDropdownList);
+            data2.button.addClass(navbarOpenedButton);
+            var config = data2.config;
+            var animation = config.animation;
+            if (
+              animation === "none" ||
+              !tram.support.transform ||
+              config.duration <= 0
+            ) {
+              immediate = true;
+            }
+            var bodyHeight = setOverlayHeight(data2);
+            var menuHeight = data2.menu.outerHeight(true);
+            var menuWidth = data2.menu.outerWidth(true);
+            var navHeight = data2.el.height();
+            var navbarEl = data2.el[0];
+            resize(0, navbarEl);
+            ix.intro(0, navbarEl);
+            Webflow.redraw.up();
+            if (!designer) {
+              $doc.on("click" + namespace, data2.outside);
+            }
+            if (immediate) {
+              complete();
+              return;
+            }
+            var transConfig =
+              "transform " + config.duration + "ms " + config.easing;
+            if (data2.overlay) {
+              menuSibling = data2.menu.prev();
+              data2.overlay.show().append(data2.menu);
+            }
+            if (config.animOver) {
+              tram(data2.menu)
+                .add(transConfig)
+                .set({
+                  x: config.animDirect * menuWidth,
+                  height: bodyHeight,
+                })
+                .start({
+                  x: 0,
+                })
+                .then(complete);
+              data2.overlay && data2.overlay.width(menuWidth);
+              return;
+            }
+            var offsetY = navHeight + menuHeight;
+            tram(data2.menu)
+              .add(transConfig)
+              .set({
+                y: -offsetY,
+              })
+              .start({
+                y: 0,
+              })
+              .then(complete);
+            function complete() {
+              data2.button.attr("aria-expanded", "true");
+            }
+          }
+          function setOverlayHeight(data2) {
+            var config = data2.config;
+            var bodyHeight = config.docHeight ? $doc.height() : $body.height();
+            if (config.animOver) {
+              data2.menu.height(bodyHeight);
+            } else if (data2.el.css("position") !== "fixed") {
+              bodyHeight -= data2.el.outerHeight(true);
+            }
+            data2.overlay && data2.overlay.height(bodyHeight);
+            return bodyHeight;
+          }
+          function close(data2, immediate) {
+            if (!data2.open) {
+              return;
+            }
+            data2.open = false;
+            data2.button.removeClass(navbarOpenedButton);
+            var config = data2.config;
+            if (
+              config.animation === "none" ||
+              !tram.support.transform ||
+              config.duration <= 0
+            ) {
+              immediate = true;
+            }
+            ix.outro(0, data2.el[0]);
+            $doc.off("click" + namespace, data2.outside);
+            if (immediate) {
+              tram(data2.menu).stop();
+              complete();
+              return;
+            }
+            var transConfig =
+              "transform " + config.duration + "ms " + config.easing2;
+            var menuHeight = data2.menu.outerHeight(true);
+            var menuWidth = data2.menu.outerWidth(true);
+            var navHeight = data2.el.height();
+            if (config.animOver) {
+              tram(data2.menu)
+                .add(transConfig)
+                .start({
+                  x: menuWidth * config.animDirect,
+                })
+                .then(complete);
+              return;
+            }
+            var offsetY = navHeight + menuHeight;
+            tram(data2.menu)
+              .add(transConfig)
+              .start({
+                y: -offsetY,
+              })
+              .then(complete);
+            function complete() {
+              data2.menu.height("");
+              tram(data2.menu).set({
+                x: 0,
+                y: 0,
+              });
+              data2.menu.each(removeMenuOpen);
+              data2.links.removeClass(navbarOpenedLink);
+              data2.dropdowns.removeClass(navbarOpenedDropdown);
+              data2.dropdownToggle.removeClass(navbarOpenedDropdownToggle);
+              data2.dropdownList.removeClass(navbarOpenedDropdownList);
+              if (data2.overlay && data2.overlay.children().length) {
+                menuSibling.length
+                  ? data2.menu.insertAfter(menuSibling)
+                  : data2.menu.prependTo(data2.parent);
+                data2.overlay.attr("style", "").hide();
+              }
+              data2.el.triggerHandler("w-close");
+              data2.button.attr("aria-expanded", "false");
+            }
+          }
+          return api;
+        })
+      );
+    },
+  });
+
   // <stdin>
   require_webflow_lottie();
   require_webflow_brand();
@@ -36020,14 +36594,16 @@
   require_webflow_scroll();
   require_webflow_touch();
   require_webflow_forms();
+  require_webflow_navbar();
 })();
+
 Webflow.require("ix2").init({
   events: {
     e: {
       id: "e",
       name: "",
       animationType: "custom",
-      eventTypeId: "MOUSE_CLICK",
+      eventTypeId: "NAVBAR_OPEN",
       action: {
         id: "",
         actionTypeId: "GENERAL_START_ACTION",
@@ -36043,13 +36619,13 @@ Webflow.require("ix2").init({
       },
       mediaQueries: ["tiny"],
       target: {
-        id: "64b93299969d2846081275d5|adeca7cd-6044-46b9-2ba3-5e2cfd6d23d3",
+        id: "64bc9556c380dc07d9eea591|bdee0a4e-8d8f-2e26-8bbe-0884e11de90a",
         appliesTo: "ELEMENT",
         styleBlockIds: [],
       },
       targets: [
         {
-          id: "64b93299969d2846081275d5|adeca7cd-6044-46b9-2ba3-5e2cfd6d23d3",
+          id: "64bc9556c380dc07d9eea591|bdee0a4e-8d8f-2e26-8bbe-0884e11de90a",
           appliesTo: "ELEMENT",
           styleBlockIds: [],
         },
@@ -36063,13 +36639,13 @@ Webflow.require("ix2").init({
         direction: null,
         effectIn: null,
       },
-      createdOn: 1689930063532,
+      createdOn: 1690090232790,
     },
     "e-2": {
       id: "e-2",
       name: "",
       animationType: "custom",
-      eventTypeId: "MOUSE_SECOND_CLICK",
+      eventTypeId: "NAVBAR_CLOSE",
       action: {
         id: "",
         actionTypeId: "GENERAL_START_ACTION",
@@ -36085,13 +36661,13 @@ Webflow.require("ix2").init({
       },
       mediaQueries: ["tiny"],
       target: {
-        id: "64b93299969d2846081275d5|adeca7cd-6044-46b9-2ba3-5e2cfd6d23d3",
+        id: "64bc9556c380dc07d9eea591|bdee0a4e-8d8f-2e26-8bbe-0884e11de90a",
         appliesTo: "ELEMENT",
         styleBlockIds: [],
       },
       targets: [
         {
-          id: "64b93299969d2846081275d5|adeca7cd-6044-46b9-2ba3-5e2cfd6d23d3",
+          id: "64bc9556c380dc07d9eea591|bdee0a4e-8d8f-2e26-8bbe-0884e11de90a",
           appliesTo: "ELEMENT",
           styleBlockIds: [],
         },
@@ -36105,13 +36681,13 @@ Webflow.require("ix2").init({
         direction: null,
         effectIn: null,
       },
-      createdOn: 1689930063532,
+      createdOn: 1690090232811,
     },
     "e-3": {
       id: "e-3",
       name: "",
       animationType: "custom",
-      eventTypeId: "MOUSE_CLICK",
+      eventTypeId: "MOUSE_OVER",
       action: {
         id: "",
         actionTypeId: "GENERAL_START_ACTION",
@@ -36119,24 +36695,24 @@ Webflow.require("ix2").init({
           delay: 0,
           easing: "",
           duration: 0,
-          actionListId: "a-3",
+          actionListId: "a-6",
           affectedElements: {},
           playInReverse: false,
           autoStopEventId: "e-4",
         },
       },
-      mediaQueries: ["tiny"],
+      mediaQueries: ["main", "medium", "small", "tiny"],
       target: {
-        selector: ".navbar_link",
+        selector: ".text-size-large",
         originalId:
-          "64b93299969d2846081275d5|3fd2dd21-7ebc-7690-6aaf-151281ad40f4",
+          "64bc9556c380dc07d9eea591|15494b51-9843-9671-f11f-f9f4f46efe1d",
         appliesTo: "CLASS",
       },
       targets: [
         {
-          selector: ".navbar_link",
+          selector: ".text-size-large",
           originalId:
-            "64b93299969d2846081275d5|3fd2dd21-7ebc-7690-6aaf-151281ad40f4",
+            "64bc9556c380dc07d9eea591|15494b51-9843-9671-f11f-f9f4f46efe1d",
           appliesTo: "CLASS",
         },
       ],
@@ -36149,13 +36725,229 @@ Webflow.require("ix2").init({
         direction: null,
         effectIn: null,
       },
-      createdOn: 1689930807652,
+      createdOn: 1690093134646,
+    },
+    "e-4": {
+      id: "e-4",
+      name: "",
+      animationType: "custom",
+      eventTypeId: "MOUSE_OUT",
+      action: {
+        id: "",
+        actionTypeId: "GENERAL_START_ACTION",
+        config: {
+          delay: 0,
+          easing: "",
+          duration: 0,
+          actionListId: "a-7",
+          affectedElements: {},
+          playInReverse: false,
+          autoStopEventId: "e-3",
+        },
+      },
+      mediaQueries: ["main", "medium", "small", "tiny"],
+      target: {
+        selector: ".text-size-large",
+        originalId:
+          "64bc9556c380dc07d9eea591|15494b51-9843-9671-f11f-f9f4f46efe1d",
+        appliesTo: "CLASS",
+      },
+      targets: [
+        {
+          selector: ".text-size-large",
+          originalId:
+            "64bc9556c380dc07d9eea591|15494b51-9843-9671-f11f-f9f4f46efe1d",
+          appliesTo: "CLASS",
+        },
+      ],
+      config: {
+        loop: false,
+        playInReverse: false,
+        scrollOffsetValue: null,
+        scrollOffsetUnit: null,
+        delay: null,
+        direction: null,
+        effectIn: null,
+      },
+      createdOn: 1690093134646,
+    },
+    "e-5": {
+      id: "e-5",
+      name: "",
+      animationType: "custom",
+      eventTypeId: "SCROLL_INTO_VIEW",
+      action: {
+        id: "",
+        actionTypeId: "GENERAL_START_ACTION",
+        config: {
+          delay: 0,
+          easing: "",
+          duration: 0,
+          actionListId: "a-8",
+          affectedElements: {},
+          playInReverse: false,
+          autoStopEventId: "e-6",
+        },
+      },
+      mediaQueries: ["main", "medium", "small", "tiny"],
+      target: {
+        selector: ".heading-style-h2",
+        originalId:
+          "64bc9556c380dc07d9eea591|06cbeb8a-eaf5-7582-3074-83f4420e2bfa",
+        appliesTo: "CLASS",
+      },
+      targets: [
+        {
+          selector: ".heading-style-h2",
+          originalId:
+            "64bc9556c380dc07d9eea591|06cbeb8a-eaf5-7582-3074-83f4420e2bfa",
+          appliesTo: "CLASS",
+        },
+      ],
+      config: {
+        loop: false,
+        playInReverse: false,
+        scrollOffsetValue: 0,
+        scrollOffsetUnit: "%",
+        delay: null,
+        direction: null,
+        effectIn: null,
+      },
+      createdOn: 1690116665809,
+    },
+    "e-7": {
+      id: "e-7",
+      name: "",
+      animationType: "custom",
+      eventTypeId: "SCROLL_INTO_VIEW",
+      action: {
+        id: "",
+        actionTypeId: "GENERAL_START_ACTION",
+        config: {
+          delay: 0,
+          easing: "",
+          duration: 0,
+          actionListId: "a-9",
+          affectedElements: {},
+          playInReverse: false,
+          autoStopEventId: "e-8",
+        },
+      },
+      mediaQueries: ["main", "medium", "small", "tiny"],
+      target: {
+        selector: ".project_item",
+        originalId:
+          "64bc9556c380dc07d9eea591|ad6838ac-62dc-24c4-6501-3d0f7d6e98b8",
+        appliesTo: "CLASS",
+      },
+      targets: [
+        {
+          selector: ".project_item",
+          originalId:
+            "64bc9556c380dc07d9eea591|ad6838ac-62dc-24c4-6501-3d0f7d6e98b8",
+          appliesTo: "CLASS",
+        },
+      ],
+      config: {
+        loop: false,
+        playInReverse: false,
+        scrollOffsetValue: 0,
+        scrollOffsetUnit: "%",
+        delay: null,
+        direction: null,
+        effectIn: null,
+      },
+      createdOn: 1690117541531,
+    },
+    "e-11": {
+      id: "e-11",
+      name: "",
+      animationType: "custom",
+      eventTypeId: "SCROLL_INTO_VIEW",
+      action: {
+        id: "",
+        actionTypeId: "GENERAL_START_ACTION",
+        config: {
+          delay: 0,
+          easing: "",
+          duration: 0,
+          actionListId: "a-10",
+          affectedElements: {},
+          playInReverse: false,
+          autoStopEventId: "e-12",
+        },
+      },
+      mediaQueries: ["main", "medium", "small", "tiny"],
+      target: {
+        id: "64bc9556c380dc07d9eea591|95e5e020-1ac6-7fcc-a6dc-7c1035b12471",
+        appliesTo: "ELEMENT",
+        styleBlockIds: [],
+      },
+      targets: [
+        {
+          id: "64bc9556c380dc07d9eea591|95e5e020-1ac6-7fcc-a6dc-7c1035b12471",
+          appliesTo: "ELEMENT",
+          styleBlockIds: [],
+        },
+      ],
+      config: {
+        loop: false,
+        playInReverse: false,
+        scrollOffsetValue: 0,
+        scrollOffsetUnit: "%",
+        delay: null,
+        direction: null,
+        effectIn: null,
+      },
+      createdOn: 1690117791784,
+    },
+    "e-13": {
+      id: "e-13",
+      name: "",
+      animationType: "custom",
+      eventTypeId: "SCROLL_INTO_VIEW",
+      action: {
+        id: "",
+        actionTypeId: "GENERAL_START_ACTION",
+        config: {
+          delay: 0,
+          easing: "",
+          duration: 0,
+          actionListId: "a-11",
+          affectedElements: {},
+          playInReverse: false,
+          autoStopEventId: "e-14",
+        },
+      },
+      mediaQueries: ["main", "medium", "small", "tiny"],
+      target: {
+        id: "64bc9556c380dc07d9eea591|af380fb8-f804-475c-14e9-6769daf9ecc5",
+        appliesTo: "ELEMENT",
+        styleBlockIds: [],
+      },
+      targets: [
+        {
+          id: "64bc9556c380dc07d9eea591|af380fb8-f804-475c-14e9-6769daf9ecc5",
+          appliesTo: "ELEMENT",
+          styleBlockIds: [],
+        },
+      ],
+      config: {
+        loop: false,
+        playInReverse: false,
+        scrollOffsetValue: 0,
+        scrollOffsetUnit: "%",
+        delay: null,
+        direction: null,
+        effectIn: null,
+      },
+      createdOn: 1690117905376,
     },
   },
   actionLists: {
     a: {
       id: "a",
-      title: "Navbar Show",
+      title: "Navbar Button Open",
       actionItemGroups: [
         {
           actionItems: [
@@ -36165,40 +36957,43 @@ Webflow.require("ix2").init({
               config: {
                 delay: 0,
                 easing: "",
-                duration: 400,
+                duration: 500,
                 target: {
-                  selector: ".navbar_humberger",
-                  selectorGuids: ["9d162e7d-3c06-a09c-e1af-a6924a45e690"],
+                  useEventTarget: "CHILDREN",
+                  selector: ".menu_button-icon",
+                  selectorGuids: ["535a6cfc-6d60-30cf-fdc4-5dfe4f170dcd"],
                 },
-                value: 36,
+                value: 0,
               },
             },
+          ],
+        },
+        {
+          actionItems: [
             {
               id: "a-n-2",
-              actionTypeId: "TRANSFORM_MOVE",
+              actionTypeId: "PLUGIN_LOTTIE",
               config: {
                 delay: 0,
                 easing: "",
                 duration: 400,
                 target: {
-                  selector: ".navbar_menu",
-                  selectorGuids: ["6692bb57-e013-2d69-b46f-17c046cd884a"],
+                  useEventTarget: "CHILDREN",
+                  selector: ".menu_button-icon",
+                  selectorGuids: ["535a6cfc-6d60-30cf-fdc4-5dfe4f170dcd"],
                 },
-                xValue: -100,
-                xUnit: "%",
-                yUnit: "PX",
-                zUnit: "PX",
+                value: 32,
               },
             },
           ],
         },
       ],
-      useFirstGroupAsInitialState: false,
-      createdOn: 1689930073110,
+      useFirstGroupAsInitialState: true,
+      createdOn: 1690090333109,
     },
     "a-2": {
       id: "a-2",
-      title: "Navbar Close",
+      title: "Navbar Button Close",
       actionItemGroups: [
         {
           actionItems: [
@@ -36210,78 +37005,407 @@ Webflow.require("ix2").init({
                 easing: "",
                 duration: 400,
                 target: {
-                  selector: ".navbar_humberger",
-                  selectorGuids: ["9d162e7d-3c06-a09c-e1af-a6924a45e690"],
+                  useEventTarget: "CHILDREN",
+                  selector: ".menu_button-icon",
+                  selectorGuids: ["535a6cfc-6d60-30cf-fdc4-5dfe4f170dcd"],
                 },
                 value: 0,
               },
             },
+          ],
+        },
+      ],
+      useFirstGroupAsInitialState: false,
+      createdOn: 1690090333109,
+    },
+    "a-6": {
+      id: "a-6",
+      title: "About Content Hover",
+      actionItemGroups: [
+        {
+          actionItems: [
             {
-              id: "a-2-n-2",
+              id: "a-6-n",
+              actionTypeId: "STYLE_TEXT_COLOR",
+              config: {
+                delay: 0,
+                easing: "",
+                duration: 400,
+                target: {
+                  useEventTarget: "SIBLINGS",
+                  selector: ".text-size-medium.about_hide",
+                  selectorGuids: [
+                    "07815991-952a-8d98-0e00-e4c25af2715c",
+                    "8dc9a2cc-aef2-ee40-8e19-3e603093f86e",
+                  ],
+                },
+                globalSwatchId: "a42766d6",
+                rValue: 179,
+                bValue: 195,
+                gValue: 190,
+                aValue: 1,
+              },
+            },
+          ],
+        },
+      ],
+      useFirstGroupAsInitialState: false,
+      createdOn: 1690093153165,
+    },
+    "a-7": {
+      id: "a-7",
+      title: "About Content Hover Out",
+      actionItemGroups: [
+        {
+          actionItems: [
+            {
+              id: "a-7-n",
+              actionTypeId: "STYLE_TEXT_COLOR",
+              config: {
+                delay: 0,
+                easing: "",
+                duration: 400,
+                target: {
+                  useEventTarget: "SIBLINGS",
+                  selector: ".text-size-medium.about_hide",
+                  selectorGuids: [
+                    "07815991-952a-8d98-0e00-e4c25af2715c",
+                    "8dc9a2cc-aef2-ee40-8e19-3e603093f86e",
+                  ],
+                },
+                globalSwatchId: "",
+                rValue: 0,
+                bValue: 0,
+                gValue: 0,
+                aValue: 0,
+              },
+            },
+          ],
+        },
+      ],
+      useFirstGroupAsInitialState: false,
+      createdOn: 1690093153165,
+    },
+    "a-8": {
+      id: "a-8",
+      title: "Heading H2 Scroll Animation",
+      actionItemGroups: [
+        {
+          actionItems: [
+            {
+              id: "a-8-n",
               actionTypeId: "TRANSFORM_MOVE",
               config: {
                 delay: 0,
                 easing: "",
                 duration: 500,
                 target: {
-                  selector: ".navbar_menu",
-                  selectorGuids: ["6692bb57-e013-2d69-b46f-17c046cd884a"],
+                  useEventTarget: true,
+                  id: "64bc9556c380dc07d9eea591|06cbeb8a-eaf5-7582-3074-83f4420e2bfa",
                 },
-                xValue: 0,
-                xUnit: "%",
-                yUnit: "PX",
+                yValue: 2.5,
+                xUnit: "PX",
+                yUnit: "rem",
                 zUnit: "PX",
+              },
+            },
+            {
+              id: "a-8-n-2",
+              actionTypeId: "STYLE_OPACITY",
+              config: {
+                delay: 0,
+                easing: "",
+                duration: 500,
+                target: {
+                  useEventTarget: true,
+                  id: "64bc9556c380dc07d9eea591|06cbeb8a-eaf5-7582-3074-83f4420e2bfa",
+                },
+                value: 0,
+                unit: "",
+              },
+            },
+          ],
+        },
+        {
+          actionItems: [
+            {
+              id: "a-8-n-3",
+              actionTypeId: "TRANSFORM_MOVE",
+              config: {
+                delay: 0,
+                easing: "inOutQuint",
+                duration: 1000,
+                target: {
+                  useEventTarget: true,
+                  id: "64bc9556c380dc07d9eea591|06cbeb8a-eaf5-7582-3074-83f4420e2bfa",
+                },
+                yValue: 0,
+                xUnit: "PX",
+                yUnit: "rem",
+                zUnit: "PX",
+              },
+            },
+            {
+              id: "a-8-n-4",
+              actionTypeId: "STYLE_OPACITY",
+              config: {
+                delay: 0,
+                easing: "inOutQuint",
+                duration: 1000,
+                target: {
+                  useEventTarget: true,
+                  id: "64bc9556c380dc07d9eea591|06cbeb8a-eaf5-7582-3074-83f4420e2bfa",
+                },
+                value: 1,
+                unit: "",
               },
             },
           ],
         },
       ],
-      useFirstGroupAsInitialState: false,
-      createdOn: 1689930161805,
+      useFirstGroupAsInitialState: true,
+      createdOn: 1690116683397,
     },
-    "a-3": {
-      id: "a-3",
-      title: "Navbar First Click",
+    "a-9": {
+      id: "a-9",
+      title: "Project Scroll Animation",
       actionItemGroups: [
         {
           actionItems: [
             {
-              id: "a-3-n",
-              actionTypeId: "PLUGIN_LOTTIE",
-              config: {
-                delay: 0,
-                easing: "",
-                duration: 400,
-                target: {
-                  selector: ".navbar_humberger",
-                  selectorGuids: ["9d162e7d-3c06-a09c-e1af-a6924a45e690"],
-                },
-                value: 0,
-              },
-            },
-            {
-              id: "a-3-n-2",
+              id: "a-9-n",
               actionTypeId: "TRANSFORM_MOVE",
               config: {
                 delay: 0,
                 easing: "",
-                duration: 400,
+                duration: 500,
                 target: {
-                  useEventTarget: "PARENT",
-                  selector: ".navbar_menu",
-                  selectorGuids: ["6692bb57-e013-2d69-b46f-17c046cd884a"],
+                  selector: ".project_item",
+                  selectorGuids: ["e9cd0130-71a2-02c5-b208-8118e936348e"],
                 },
-                xValue: 0,
-                xUnit: "%",
-                yUnit: "PX",
+                yValue: 4,
+                xUnit: "PX",
+                yUnit: "rem",
                 zUnit: "PX",
+              },
+            },
+            {
+              id: "a-9-n-2",
+              actionTypeId: "STYLE_OPACITY",
+              config: {
+                delay: 0,
+                easing: "",
+                duration: 500,
+                target: {
+                  selector: ".project_item",
+                  selectorGuids: ["e9cd0130-71a2-02c5-b208-8118e936348e"],
+                },
+                value: 0,
+                unit: "",
+              },
+            },
+          ],
+        },
+        {
+          actionItems: [
+            {
+              id: "a-9-n-3",
+              actionTypeId: "TRANSFORM_MOVE",
+              config: {
+                delay: 0,
+                easing: "inOutQuint",
+                duration: 1000,
+                target: {
+                  selector: ".project_item",
+                  selectorGuids: ["e9cd0130-71a2-02c5-b208-8118e936348e"],
+                },
+                yValue: 0,
+                xUnit: "PX",
+                yUnit: "rem",
+                zUnit: "PX",
+              },
+            },
+            {
+              id: "a-9-n-4",
+              actionTypeId: "STYLE_OPACITY",
+              config: {
+                delay: 0,
+                easing: "inOutQuint",
+                duration: 1000,
+                target: {
+                  selector: ".project_item",
+                  selectorGuids: ["e9cd0130-71a2-02c5-b208-8118e936348e"],
+                },
+                value: 1,
+                unit: "",
               },
             },
           ],
         },
       ],
-      useFirstGroupAsInitialState: false,
-      createdOn: 1689930923804,
+      useFirstGroupAsInitialState: true,
+      createdOn: 1690117570416,
+    },
+    "a-10": {
+      id: "a-10",
+      title: "Heading H1 Animation",
+      actionItemGroups: [
+        {
+          actionItems: [
+            {
+              id: "a-10-n",
+              actionTypeId: "TRANSFORM_MOVE",
+              config: {
+                delay: 0,
+                easing: "",
+                duration: 500,
+                target: {
+                  id: "64bc9556c380dc07d9eea591|95e5e020-1ac6-7fcc-a6dc-7c1035b12471",
+                },
+                xValue: null,
+                yValue: -2.5,
+                zValue: null,
+                xUnit: "rem",
+                yUnit: "rem",
+                zUnit: "px",
+              },
+            },
+            {
+              id: "a-10-n-2",
+              actionTypeId: "STYLE_OPACITY",
+              config: {
+                delay: 0,
+                easing: "",
+                duration: 500,
+                target: {
+                  id: "64bc9556c380dc07d9eea591|95e5e020-1ac6-7fcc-a6dc-7c1035b12471",
+                },
+                value: 0,
+                unit: "",
+              },
+            },
+          ],
+        },
+        {
+          actionItems: [
+            {
+              id: "a-10-n-3",
+              actionTypeId: "TRANSFORM_MOVE",
+              config: {
+                delay: 0,
+                easing: "inOutQuint",
+                duration: 1000,
+                target: {
+                  id: "64bc9556c380dc07d9eea591|95e5e020-1ac6-7fcc-a6dc-7c1035b12471",
+                },
+                xValue: null,
+                yValue: 0,
+                xUnit: "rem",
+                yUnit: "rem",
+                zUnit: "PX",
+              },
+            },
+            {
+              id: "a-10-n-4",
+              actionTypeId: "STYLE_OPACITY",
+              config: {
+                delay: 0,
+                easing: "inOutQuint",
+                duration: 1000,
+                target: {
+                  id: "64bc9556c380dc07d9eea591|95e5e020-1ac6-7fcc-a6dc-7c1035b12471",
+                },
+                value: 1,
+                unit: "",
+              },
+            },
+          ],
+        },
+      ],
+      useFirstGroupAsInitialState: true,
+      createdOn: 1690117802522,
+    },
+    "a-11": {
+      id: "a-11",
+      title: "Hero Image Animation",
+      actionItemGroups: [
+        {
+          actionItems: [
+            {
+              id: "a-11-n",
+              actionTypeId: "TRANSFORM_MOVE",
+              config: {
+                delay: 0,
+                easing: "",
+                duration: 500,
+                target: {
+                  selector: ".hero_image",
+                  selectorGuids: ["b0df2127-7d2d-374a-76ee-ca5428c8c85d"],
+                },
+                xValue: null,
+                yValue: -2.5,
+                xUnit: "rem",
+                yUnit: "rem",
+                zUnit: "PX",
+              },
+            },
+            {
+              id: "a-11-n-2",
+              actionTypeId: "STYLE_OPACITY",
+              config: {
+                delay: 0,
+                easing: "",
+                duration: 500,
+                target: {
+                  selector: ".hero_image",
+                  selectorGuids: ["b0df2127-7d2d-374a-76ee-ca5428c8c85d"],
+                },
+                value: 0,
+                unit: "",
+              },
+            },
+          ],
+        },
+        {
+          actionItems: [
+            {
+              id: "a-11-n-3",
+              actionTypeId: "TRANSFORM_MOVE",
+              config: {
+                delay: 0,
+                easing: "inOutQuint",
+                duration: 1000,
+                target: {
+                  selector: ".hero_image",
+                  selectorGuids: ["b0df2127-7d2d-374a-76ee-ca5428c8c85d"],
+                },
+                xValue: null,
+                yValue: 0,
+                xUnit: "rem",
+                yUnit: "rem",
+                zUnit: "PX",
+              },
+            },
+            {
+              id: "a-11-n-4",
+              actionTypeId: "STYLE_OPACITY",
+              config: {
+                delay: 0,
+                easing: "inOutQuint",
+                duration: 1000,
+                target: {
+                  selector: ".hero_image",
+                  selectorGuids: ["b0df2127-7d2d-374a-76ee-ca5428c8c85d"],
+                },
+                value: 1,
+                unit: "",
+              },
+            },
+          ],
+        },
+      ],
+      useFirstGroupAsInitialState: true,
+      createdOn: 1690117909832,
     },
   },
   site: {
